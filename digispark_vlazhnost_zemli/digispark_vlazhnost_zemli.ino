@@ -1,106 +1,89 @@
-//#define ARDUINO
-#define DIGISPARK
-
-#ifdef ARDUINO
-#define RHEOSTAT_PIN A1
-#define RHEOSTAT_PIN_LOG RHEOSTAT_PIN
-#define LED_PIN 13
-#define SENS_PIN A0
-#define SENS_PIN_LOG SENS_PIN
-#define ANALOG_RATE 1
-#define PUMP_PIN 2
-#endif
-#ifdef DIGISPARK
-#define RHEOSTAT_PIN 13
-#define RHEOSTAT_PIN_LOG 13
 #define LED_PIN 1
-#define SENS_PIN 4
-#define SENS_PIN_LOG 2
-#define ANALOG_RATE 2
-#define PUMP_PIN 0
-#endif
+// 2-4
+#define RHEOSTAT_PIN 2
+#define SENS_PIN A0
+#define PUMP_PIN 4
 
-long count = 1;
+#include "digispark.h"
+//#include "arduino.h"
+#include "func.h"
 
 void setup()
 {
 #ifdef ARDUINO
   Serial.begin(9600);
 #endif
+  for (int i = 0; i <= 6; i++) pinMode(i, INPUT);
   pinMode(LED_PIN, OUTPUT);
-  pinMode(SENS_PIN, INPUT);
   pinMode(PUMP_PIN, OUTPUT);
 }
 
-void blink() {
-  digitalWrite(LED_PIN, HIGH);
-  delay(100);
-  digitalWrite(LED_PIN, LOW);
-  delay(300);
+int nextConfCheck = 0;
+int nextPumpCheck = 0;
+int nextDrynessCheck = 0;
+int nextBlink = 0;
+
+double lastDrynessLevel = 0.;
+
+void fetchPump() {
+  nextPumpCheck = localTime + 2 * 60 * 1000;
 }
 
-void showVal(double value) {
-#ifdef ARDUINO
-  Serial.println(value);
-#endif
-  for (int i = 0; i < value / 50; i++) {
-    blink();
-  }
+
+void fetchBlink() {
+  nextBlink = localTime + 1000;
 }
 
-void pumpWater(int pumpPin, int durationSeconds) {
-  digitalWrite(pumpPin, HIGH);
-  digitalWrite(LED_PIN, HIGH);
-  delay(durationSeconds * 1000);
-  digitalWrite(pumpPin, LOW);
-  digitalWrite(LED_PIN, LOW);
+void fetchDryness() {
+  nextDrynessCheck = localTime + 5000;
+  fetchBlink();
 }
 
-double analogThrustedRead(int pin) {
-  int count = 100;
-  double value = 0;
-  for (int i = 0; i < count; i++) {
-    value += analogRead(pin);
-    delay(10);
-  }
-  return value / count * ANALOG_RATE;
+
+void fetchConf() {
+  nextConfCheck = localTime + 1000;
+  fetchPump();
+  fetchDryness();
 }
 
-void checkAndDispense(int sensorPin, int pumpPin, double drynessLevel) {
-  double dryness = analogThrustedRead(sensorPin);
-  showVal(dryness);
-  if (dryness > drynessLevel) {
-#ifdef ARDUINO
-    Serial.print("(pump)dryness : ");
-    Serial.print(dryness);
-    Serial.print(" > drynessLevel: ");
-    Serial.println(drynessLevel);
-#endif
-    pumpWater(pumpPin, 3);
-  } else {
-#ifdef ARDUINO
-    Serial.print("(nothing do)dryness : ");
-    Serial.print(dryness);
-    Serial.print(" < drynessLevel: ");
-    Serial.println(drynessLevel);
-#endif
-  }
-}
+long lastLocalTime = 100;
 
 void loop() {
-  if (count++ % 5 == 0) {
-    double drynessLevel = 600.;
-#ifdef RHEOSTAT_PIN_LOG
-    drynessLevel = analogThrustedRead(RHEOSTAT_PIN_LOG);
-#endif
-#ifdef ARDUINO
-    Serial.print("Rheo: ");
-    Serial.println(drynessLevel);
-#endif
-    checkAndDispense(SENS_PIN_LOG, PUMP_PIN, drynessLevel);
-  } else {
+  if (lastLocalTime > localTime) {
+    fetchConf();
+  }
+  double drynessLevel = getDrynessLevel(RHEOSTAT_PIN);
+  if (abs(drynessLevel - lastDrynessLevel) > 10) {
+    digitalWrite(LED_PIN, HIGH);
+    fetchConf();
+  }
+
+  if (nextConfCheck > 0) {
+    if (localTime > nextConfCheck) {
+      blink(100, 100, 3);
+      for (int i = 0; i < 3; i++) blinkPin(LED_PIN, 100, 100);
+      nextConfCheck = 0;
+      fetchDryness();
+    }
+  } else if (localTime > nextDrynessCheck) {
+    fetchDryness();
+    double dryness = analogThrustedRead(SENS_PIN);
+    //    showVal(dryness);
+    if (needPump(SENS_PIN, drynessLevel)) {
+      if (localTime > nextPumpCheck) {
+        pumpWater(PUMP_PIN, 3);
+        fetchPump();
+      } else {
+        pumpWater(LED_PIN, 3);
+      }
+    } else {
+      delay_(1000);
+    }
+  } else if (localTime > nextBlink) {
+    fetchBlink();
     blink();
   }
-  if (count > 1000000) count = 0;
-  delay(1000);
+  delay_(100);
+  lastDrynessLevel = drynessLevel;
+  lastLocalTime = localTime;
 }
