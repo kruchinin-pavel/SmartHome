@@ -1,7 +1,7 @@
 #define LED_PIN 1
 // 2-4
 #define RHEOSTAT_PIN 2
-#define SENS_PIN 3
+#define SENS_PIN 5
 #define PUMP_PIN 4
 
 #include "digispark.h"
@@ -30,9 +30,9 @@ void loop() {
   } else {
     if (nextPump-- <= 0) {
       blinkPin(PUMP_PIN, 3000, 0);
-      nextPump = 30*60;
+      nextPump = 30 * 60;
     }
     blink(1000, 100, 1);
   }
-  
+
 }
