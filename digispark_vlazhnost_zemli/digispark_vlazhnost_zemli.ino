@@ -1,11 +1,11 @@
-#define LED_PIN 1
+#define LED_PIN 13
 // 2-4
-#define RHEOSTAT_PIN 2
-#define SENS_PIN 5
-#define PUMP_PIN 4
+#define RHEOSTAT_PIN A2
+#define SENS_PIN A0
+#define PUMP_PIN 2
 
-#include "digispark.h"
-//#include "arduino.h"
+//#include "digispark.h"
+#include "arduino.h"
 #include "func.h"
 
 void setup()
@@ -18,21 +18,39 @@ void setup()
   pinMode(PUMP_PIN, OUTPUT);
 }
 
-int nextPump = 0;
+int nextPump = 60;
 
-void loop() {
+void loop_test() {
   double drynessLevel = analogThrustedRead(RHEOSTAT_PIN);
   double dryness = analogThrustedRead(SENS_PIN);
+  delay(10);
+  Serial.println(dryness);
+}
+
+void loop_work() {
+  double drynessLevel = analogThrustedRead(RHEOSTAT_PIN)+100;
+  double dryness = (analogThrustedRead(SENS_PIN)-300)*1024/450;
+  String v;
   if (dryness < drynessLevel) {
     blink(100, 100, 3);
     nextPump = 30;
     delay(500);
+    v = " ---- ";
   } else {
     if (nextPump-- <= 0) {
       blinkPin(PUMP_PIN, 3000, 0);
       nextPump = 30 * 60;
     }
     blink(1000, 100, 1);
+    v = " Lyem ";
   }
+#ifdef ARDUINO  
+  Serial.print(dryness);
+  Serial.print(v);
+  Serial.println(drynessLevel);
+#endif
+}
 
+void loop() {
+  loop_work();
 }

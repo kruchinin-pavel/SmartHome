@@ -13,7 +13,7 @@ void blink(int highMs, int lowMs, int count) {
 }
 
 double analogThrustedRead(int pin) {
-  int count = 50;
+  int count = 10;
   double value = 0;
   for (int i = 0; i < count; i++) {
     value += analogRead_(pin);
