@@ -7,12 +7,61 @@
 //#include "digispark.h"
 #include "arduino.h"
 #include "func.h"
+class Dispenser {
+    int id, nextPump, rheoPin, sensPin, pumpPin;
+    double rheo, sens;
+    String res;
+    String v;
+  public:
+    Dispenser(int id, int rheoPin, int sensPin, int pumpPin) {
+      this->id = id;
+      this->sensPin = sensPin;
+      this->rheoPin = rheoPin;
+      this->pumpPin = pumpPin;
+    };
+    void update() {
+      double drynessLevel = analogThrustedRead(rheoPin) + 100;
+      double dryness = (analogThrustedRead(sensPin) - 300) * 1024 / 450;
+      rheo = drynessLevel;
+      sens = dryness;
+      if (dryness < drynessLevel) {
+        nextPump = 30;
+        v = " ---- ";
+      } else {
+        if (nextPump-- <= 0) {
+          blinkPin(pumpPin, 3000, 0);
+          nextPump = 30 * 60;
+        }
+        v = " Lyem " + id;
+      }
+      toString();
+    };
 
-struct Dispenser {
-  int nextPump = 60, rheoPin, sensPin, pumpPin;
+    void toString() {
+#ifdef ARDUINO
+      String res = "";
+      res += id;
+      res += ": sens ";
+      res += sens;
+      res += v;
+      res += ": rheo ";
+      res += rheo;
+      res += "\t";
+      this->res = res;
+#endif
+    }
+
+    String getStr() {
+      return res;
+    }
+
 };
-//.rheoPin = A2, .sensPin = A0, .pumpPin = 2
-struct Dispenser dispensers[1];
+
+Dispenser dispensers[3] = {
+  Dispenser( 1, A2, A3, 5),
+  Dispenser( 2, A1, A4, 6),
+  Dispenser( 3, A0, A5, 7)
+};
 
 void setup()
 {
@@ -31,33 +80,17 @@ void loop_test() {
   Serial.println(dryness);
 }
 
-void loop_work(struct Dispenser d) {
-  double drynessLevel = analogThrustedRead(d.rheoPin) + 100;
-  double dryness = (analogThrustedRead(d.sensPin) - 300) * 1024 / 450;
-  String v;
-  if (dryness < drynessLevel) {
-    blink(100, 100, 3);
-    d.nextPump = 30;
-    delay(500);
-    v = " ---- ";
-  } else {
-    if (d.nextPump-- <= 0) {
-      blinkPin(d.pumpPin, 3000, 0);
-      d.nextPump = 30 * 60;
-    }
-    blink(1000, 100, 1);
-    v = " Lyem ";
-  }
-#ifdef ARDUINO
-  Serial.print(dryness);
-  Serial.print(v);
-  Serial.println(drynessLevel);
-#endif
-}
-
 void loop() {
   size_t n = sizeof(dispensers) / sizeof(dispensers[0]);
   for (int i = 0; i < n; i++) {
-    loop_work(dispensers[i]);
+    dispensers[i].update();
   }
+  blink(1000, 100, 1);
+#ifdef ARDUINO
+  Serial.print("ln-> ");
+  for (int i = 0; i < n; i++) {
+    Serial.print(dispensers[i].getStr());
+  }
+  Serial.println();
+#endif
 }
