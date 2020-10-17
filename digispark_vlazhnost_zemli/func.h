@@ -5,11 +5,7 @@ void blinkPin(int pin, int highMs, int lowMs) {
   digitalWrite(pin, HIGH);
   delay(highMs);
   digitalWrite(pin, LOW);
-  delay(lowMs);
-}
-
-void blink(int highMs, int lowMs, int count) {
-  for (int i = 0; i < count; i++) blinkPin(LED_PIN, highMs, lowMs);
+  if (lowMs > 0)   delay(lowMs);
 }
 
 double analogThrustedRead(int pin) {

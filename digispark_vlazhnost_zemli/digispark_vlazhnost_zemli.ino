@@ -1,83 +1,87 @@
-#define LED_PIN 13
-// 2-4
-#define RHEOSTAT_PIN A2
-#define SENS_PIN A0
-#define PUMP_PIN 2
-
+#define LED_PIN 0
 //#include "digispark.h"
 #include "arduino.h"
 #include "func.h"
+
 class Dispenser {
-    int id, nextPump, rheoPin, sensPin, pumpPin;
-    double rheo, sens;
+    int id, nextPump, rheoPin, sensPin, pumpPin, ledPin;
+    int rheo, sens;
     String res;
     String v;
   public:
-    Dispenser(int id, int rheoPin, int sensPin, int pumpPin) {
+    Dispenser(int id, int rheoPin, int sensPin, int pumpPin, int ledPin) {
       this->id = id;
       this->sensPin = sensPin;
       this->rheoPin = rheoPin;
       this->pumpPin = pumpPin;
+      this->ledPin = ledPin;
     };
+
+    void init() {
+      pinMode(rheoPin, INPUT);
+      pinMode(sensPin, INPUT);
+      pinMode(pumpPin, OUTPUT);
+      pinMode(ledPin, OUTPUT);
+    }
+
     void update() {
-      double drynessLevel = analogThrustedRead(rheoPin) + 100;
-      double dryness = (analogThrustedRead(sensPin) - 300) * 1024 / 450;
-      rheo = drynessLevel;
-      sens = dryness;
-      if (dryness < drynessLevel) {
-        nextPump = 30;
-        v = " ---- ";
-      } else {
+      //      double drynessLevel = analogThrustedRead(rheoPin) + 100;
+      //      double dryness = (analogThrustedRead(sensPin) - 300) * 1024 / 450;
+      rheo = analogRead(rheoPin);
+      sens = analogRead(sensPin);
+      if (sens > rheo) {
+        digitalWrite(ledPin, HIGH);
         if (nextPump-- <= 0) {
           blinkPin(pumpPin, 3000, 0);
           nextPump = 30 * 60;
+          v = " pmp ";
+        } else {
+          v = " w";
+          v += nextPump;
         }
-        v = " Lyem " + id;
+        v += " ";
+      } else {
+        blinkPin(ledPin, 10, 0);
+        nextPump = 30;
+        v = " oki ";
       }
       toString();
     };
 
-    void toString() {
-#ifdef ARDUINO
+    String toString() {
       String res = "";
-      res += id;
-      res += ": sens ";
+      res += "s";
       res += sens;
       res += v;
-      res += ": rheo ";
+      res += "r";
       res += rheo;
-      res += "\t";
+      res += ";\t";
       this->res = res;
-#endif
-    }
-
-    String getStr() {
       return res;
     }
+
+  private:
+    void blink(int highMs, int lowMs, int count) {
+      for (int i = 0; i < count; i++) blinkPin(ledPin, highMs, lowMs);
+    }
+
 
 };
 
 Dispenser dispensers[3] = {
-  Dispenser( 1, A2, A3, 5),
-  Dispenser( 2, A1, A4, 6),
-  Dispenser( 3, A0, A5, 7)
+  Dispenser( 1, A2, A3, 5, 2),
+  Dispenser( 2, A1, A4, 6, 3),
+  Dispenser( 3, A0, A5, 7, 4)
 };
+size_t n;
 
 void setup()
 {
+  size_t n = sizeof(dispensers) / sizeof(dispensers[0]);
+  for (int i = 0; i < n; i++) dispensers[i].init();
 #ifdef ARDUINO
   Serial.begin(9600);
 #endif
-  for (int i = 0; i <= 6; i++) pinMode(i, INPUT);
-  pinMode(LED_PIN, OUTPUT);
-  pinMode(PUMP_PIN, OUTPUT);
-}
-
-void loop_test() {
-  double drynessLevel = analogThrustedRead(RHEOSTAT_PIN);
-  double dryness = analogThrustedRead(SENS_PIN);
-  delay(10);
-  Serial.println(dryness);
 }
 
 void loop() {
@@ -85,11 +89,10 @@ void loop() {
   for (int i = 0; i < n; i++) {
     dispensers[i].update();
   }
-  blink(1000, 100, 1);
+  delay(1000);
 #ifdef ARDUINO
-  Serial.print("ln-> ");
   for (int i = 0; i < n; i++) {
-    Serial.print(dispensers[i].getStr());
+    Serial.print(dispensers[i].toString());
   }
   Serial.println();
 #endif
