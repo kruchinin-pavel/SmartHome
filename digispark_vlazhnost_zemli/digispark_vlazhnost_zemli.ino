@@ -8,6 +8,12 @@
 #include "arduino.h"
 #include "func.h"
 
+struct Dispenser {
+  int nextPump = 60, rheoPin, sensPin, pumpPin;
+};
+//.rheoPin = A2, .sensPin = A0, .pumpPin = 2
+struct Dispenser dispensers[1];
+
 void setup()
 {
 #ifdef ARDUINO
@@ -18,8 +24,6 @@ void setup()
   pinMode(PUMP_PIN, OUTPUT);
 }
 
-int nextPump = 60;
-
 void loop_test() {
   double drynessLevel = analogThrustedRead(RHEOSTAT_PIN);
   double dryness = analogThrustedRead(SENS_PIN);
@@ -27,24 +31,24 @@ void loop_test() {
   Serial.println(dryness);
 }
 
-void loop_work() {
-  double drynessLevel = analogThrustedRead(RHEOSTAT_PIN)+100;
-  double dryness = (analogThrustedRead(SENS_PIN)-300)*1024/450;
+void loop_work(struct Dispenser d) {
+  double drynessLevel = analogThrustedRead(d.rheoPin) + 100;
+  double dryness = (analogThrustedRead(d.sensPin) - 300) * 1024 / 450;
   String v;
   if (dryness < drynessLevel) {
     blink(100, 100, 3);
-    nextPump = 30;
+    d.nextPump = 30;
     delay(500);
     v = " ---- ";
   } else {
-    if (nextPump-- <= 0) {
-      blinkPin(PUMP_PIN, 3000, 0);
-      nextPump = 30 * 60;
+    if (d.nextPump-- <= 0) {
+      blinkPin(d.pumpPin, 3000, 0);
+      d.nextPump = 30 * 60;
     }
     blink(1000, 100, 1);
     v = " Lyem ";
   }
-#ifdef ARDUINO  
+#ifdef ARDUINO
   Serial.print(dryness);
   Serial.print(v);
   Serial.println(drynessLevel);
@@ -52,5 +56,8 @@ void loop_work() {
 }
 
 void loop() {
-  loop_work();
+  size_t n = sizeof(dispensers) / sizeof(dispensers[0]);
+  for (int i = 0; i < n; i++) {
+    loop_work(dispensers[i]);
+  }
 }
