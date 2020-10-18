@@ -3,36 +3,87 @@
 #include "arduino.h"
 #include "func.h"
 
+class NormalizedAnalogVal {
+    int pin;
+    String pinStr, toStringVal;
+    double sens = -1, sensMax = 600, sensMin = 400;
+  public:
+    NormalizedAnalogVal() {}
+    
+    NormalizedAnalogVal(int pin, String pinStr, double maxVal, double minVal) {
+      this->pin = pin;
+      this->pinStr = pinStr;
+      this->sensMax = maxVal;
+      this->sensMin = minVal;
+    };
+
+    double getVal() {
+      return sens;
+    }
+
+    void readVal() {
+      if (enabled()) {
+        sens = nomalize(analogThrustedRead(pin));
+      }
+    };
+
+    boolean enabled() {
+      return pin > 0;
+    }
+
+    void init() {
+      pinMode(pin, INPUT);
+      Serial.print(pinStr);
+      Serial.println(" made INPUT");
+    }
+
+    String toString() {
+      toStringVal = pinStr;
+      toStringVal += "=";
+      toStringVal += sens;
+      return toStringVal;
+    }
+
+  private:
+    double nomalize(double sens) {
+      if (sens > 0) {
+        if (sens < sensMin) sensMin = sens;
+        if (sens > sensMax) sensMax = sens;
+      }
+      if (sens > sensMax ||  sens < sensMin)  return -1;
+      return (sens - sensMin) * 1024 / (sensMax - sensMin + 1);
+    };
+};
+
 class Dispenser {
-    int id, nextPump, rheoPin, sensPin, pumpPin, ledPin;
-    int rheo, sens;
+    NormalizedAnalogVal  rheo;
+    NormalizedAnalogVal  sens;
+    int id, nextPump, pumpPin, ledPin;
     String res;
     String v;
   public:
-    Dispenser(int id, int rheoPin, int sensPin, int pumpPin, int ledPin) {
+    Dispenser(int id, int rheoPin, int sensPin, String sensPinStr, int pumpPin, int ledPin) {
       this->id = id;
-      this->sensPin = sensPin;
-      this->rheoPin = rheoPin;
+      sens = NormalizedAnalogVal(sensPin, sensPinStr, 700., 400.);
+      rheo = NormalizedAnalogVal(rheoPin, "", 1024, 0);
       this->pumpPin = pumpPin;
       this->ledPin = ledPin;
     };
 
     void init() {
-      pinMode(rheoPin, INPUT);
-      pinMode(sensPin, INPUT);
+      rheo.init();
+      sens.init();
       pinMode(pumpPin, OUTPUT);
       pinMode(ledPin, OUTPUT);
     }
 
     void update() {
-      //      double drynessLevel = analogThrustedRead(rheoPin) + 100;
-      //      double dryness = (analogThrustedRead(sensPin) - 300) * 1024 / 450;
-      rheo = analogRead(rheoPin);
-      sens = analogRead(sensPin);
-      if (sens > rheo) {
+      rheo.readVal();
+      sens.readVal();
+      if (sens.getVal() > rheo.getVal()) {
         digitalWrite(ledPin, HIGH);
         if (nextPump-- <= 0) {
-          blinkPin(pumpPin, 3000, 0);
+          //          blinkPin(pumpPin, 3000, 0);
           nextPump = 30 * 60;
           v = " pmp ";
         } else {
@@ -45,19 +96,21 @@ class Dispenser {
         nextPump = 30;
         v = " oki ";
       }
-      toString();
+      //      Serial.println(toString());
     };
 
     String toString() {
       String res = "";
-      res += "s";
-      res += sens;
-      res += v;
-      res += "r";
-      res += rheo;
+      res += id;
+      res += " s" + sens.toString();
+      if (rheo.enabled()) {
+        res += v;
+        res += "r";
+        res += rheo.toString();
+      }
       res += ";\t";
       this->res = res;
-      return res;
+      return this->res;
     }
 
   private:
@@ -65,23 +118,22 @@ class Dispenser {
       for (int i = 0; i < count; i++) blinkPin(ledPin, highMs, lowMs);
     }
 
-
 };
 
-Dispenser dispensers[3] = {
-  Dispenser( 1, A2, A3, 5, 2),
-  Dispenser( 2, A1, A4, 6, 3),
-  Dispenser( 3, A0, A5, 7, 4)
+Dispenser dispensers[] = {
+  Dispenser( 1, -1, A3, "A3", 5, 2),
+  Dispenser( 2, -1, A5, "A5", 6, 3),
+  Dispenser( 3, -1, A7, "A7", 7, 4)
 };
 size_t n;
 
 void setup()
 {
   size_t n = sizeof(dispensers) / sizeof(dispensers[0]);
-  for (int i = 0; i < n; i++) dispensers[i].init();
 #ifdef ARDUINO
   Serial.begin(9600);
 #endif
+  for (int i = 0; i < n; i++) dispensers[i].init();
 }
 
 void loop() {
