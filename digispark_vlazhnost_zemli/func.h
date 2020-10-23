@@ -111,7 +111,7 @@ class Dispenser {
         v += " ";
       } else {
         ret = blinkPin(ledPin, 10, 0);
-        nextPump = 30;
+        nextPump = 3;
         v = " oki ";
       }
       //      Serial.println(toString());
