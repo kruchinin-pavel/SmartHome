@@ -4,9 +4,9 @@
 #include "func.h"
 
 Dispenser dispensers[] = {
-  Dispenser( 1, A2, "A2", A5, "A5", 5, 2),
-  Dispenser( 2, A3, "A3", A6, "A6", 6, 3),
-  Dispenser( 3, A4, "A4", A7, "A7", 7, 4)
+  Dispenser( 1, A5, "A5", A4, "A4", 5, 4), //Blue (left)
+  Dispenser( 2, A7, "A7", A3, "A3", 6, 3), //Yellow (Middle)
+  Dispenser( 3, A6, "A6", A2, "A2", 7, 2)  //Red (right)
 };
 size_t n;
 
