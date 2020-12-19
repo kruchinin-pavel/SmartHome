@@ -63,12 +63,18 @@ class NormalizedAnalogVal {
 
   private:
     int nomalize(double sens) {
-      if (sens > 0) {
-        if (sens < sensMin) sensMin = sens;
-        if (sens > sensMax) sensMax = sens;
-      }
-      if (sens > sensMax ||  sens < sensMin)  return -1;
-      return (sens - sensMin) * 1024 / (sensMax - sensMin + 1);
+      return sens;
+//      if (sens > 0) {
+//        if (sens < sensMin) sensMin = sens;
+//        if (sens > sensMax) sensMax = sens;
+//      }
+//      if (sens > sensMax){
+//        return sensMax;
+//      }
+//      if (sens < sensMin){
+//        return sensMin;
+//      }
+//      return (sens - sensMin) * 1024 / (sensMax - sensMin + 1);
     };
 };
 
@@ -88,10 +94,12 @@ class Dispenser {
     };
 
     void init() {
+      pinMode(pumpPin, OUTPUT);
+      digitalWrite(pumpPin, LOW);
+      pinMode(ledPin, OUTPUT);
+      digitalWrite(ledPin, LOW);
       rheo.init();
       sens.init();
-      pinMode(pumpPin, OUTPUT);
-      pinMode(ledPin, OUTPUT);
     }
 
     int update() {

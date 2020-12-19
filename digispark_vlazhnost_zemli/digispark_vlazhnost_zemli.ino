@@ -3,10 +3,11 @@
 #include "arduino.h"
 #include "func.h"
 
+//(id, rheoPin, rheoPinStr, sensPin, sensPinStr, pumpPin, ledPin) {
 Dispenser dispensers[] = {
-  Dispenser( 1, A5, "A5", A4, "A4", 5, 4), //Blue (left)
+  Dispenser( 1, A5, "A5", A4, "A4", 7, 2), //Blue (left)
   Dispenser( 2, A7, "A7", A3, "A3", 6, 3), //Yellow (Middle)
-  Dispenser( 3, A6, "A6", A2, "A2", 7, 2)  //Red (right)
+  Dispenser( 3, A6, "A6", A2, "A2", 5, 4)  //Red (right)
 };
 size_t n;
 
