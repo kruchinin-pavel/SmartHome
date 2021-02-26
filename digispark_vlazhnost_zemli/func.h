@@ -24,6 +24,7 @@ class NormalizedAnalogVal {
     int pin;
     String pinStr, toStringVal;
     double sens = -1, sensMax = 600, sensMin = 400;
+    double currToCompare = -1;
   public:
     NormalizedAnalogVal() {}
 
@@ -34,8 +35,26 @@ class NormalizedAnalogVal {
       this->sensMin = minVal;
     };
 
+    boolean lt(double level) {
+      if (getVal() - currToCompare > 50) {
+        currToCompare = -1;
+      }
+      double cmp = currToCompare == -1 ? getVal() : currToCompare;
+      if (cmp <= level) {
+        if (currToCompare == -1 || cmp > getVal() ) {
+          currToCompare = cmp - 25;
+        }
+        return true;
+      }
+      return false;
+    }
+
     double getVal() {
       return sens;
+    }
+
+    double getCmpVal() {
+      return currToCompare ;
     }
 
     void readVal() {
@@ -58,23 +77,26 @@ class NormalizedAnalogVal {
       toStringVal = pinStr;
       toStringVal += "=";
       toStringVal += sens;
+      toStringVal += "(";
+      toStringVal += currToCompare;
+      toStringVal += ")";
       return toStringVal;
     }
 
   private:
     int nomalize(double sens) {
       return sens;
-//      if (sens > 0) {
-//        if (sens < sensMin) sensMin = sens;
-//        if (sens > sensMax) sensMax = sens;
-//      }
-//      if (sens > sensMax){
-//        return sensMax;
-//      }
-//      if (sens < sensMin){
-//        return sensMin;
-//      }
-//      return (sens - sensMin) * 1024 / (sensMax - sensMin + 1);
+      //      if (sens > 0) {
+      //        if (sens < sensMin) sensMin = sens;
+      //        if (sens > sensMax) sensMax = sens;
+      //      }
+      //      if (sens > sensMax) {
+      //        return sensMax;
+      //      }
+      //      if (sens < sensMin) {
+      //        return sensMin;
+      //      }
+      //      return (sens - sensMin) * 1024 / (sensMax - sensMin + 1);
     };
 };
 
@@ -106,7 +128,7 @@ class Dispenser {
       rheo.readVal();
       sens.readVal();
       int ret = 0;
-      if (sens.getVal() > rheo.getVal()) {
+      if (rheo.lt(sens.getVal())) {
         ret = blinkPin(ledPin, 1000, 0);
         if (nextPump-- <= 0) {
           ret += blinkPin(pumpPin, 3000, 0);
