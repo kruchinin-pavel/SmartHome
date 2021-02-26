@@ -45,6 +45,8 @@ class NormalizedAnalogVal {
           currToCompare = cmp - 25;
         }
         return true;
+      } else {
+        currToCompare = -1;
       }
       return false;
     }
