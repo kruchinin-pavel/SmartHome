@@ -4,18 +4,18 @@
 #include "func.h"
 
 //(id, rheoPin, rheoPinStr, sensPin, sensPinStr, pumpPin, ledPin) {
-//// Версия для макетной платы
+// Версия для макетной платы
+//Dispenser dispensers[] = {
+//  Dispenser( 1, A5, "A5", A4, "A4", 7, 2), //Blue (left)
+//  Dispenser( 2, A7, "A7", A3, "A3", 6, 3), //Yellow (Middle)
+//  Dispenser( 3, A6, "A6", A2, "A2", 5, 4)  //Red (right)
+//};
+// Версия для макетной печатной платы
 Dispenser dispensers[] = {
-  Dispenser( 1, A5, "A5", A4, "A4", 7, 2), //Blue (left)
-  Dispenser( 2, A7, "A7", A3, "A3", 6, 3), //Yellow (Middle)
+  Dispenser( 1, A0, "A0", A4, "A4", 7, 2), //Blue (left)
+  Dispenser( 2, A7, "A7", A1, "A1", 5, 3), //Yellow (Middle)
   Dispenser( 3, A6, "A6", A2, "A2", 5, 4)  //Red (right)
 };
-// Версия для макетной печатной платы
-//Dispenser dispensers[] = {
-////  Dispenser( 1, A0, "A0", A4, "A4", 7, 2)//, //Blue (left)
-//  Dispenser( 2, A7, "A7", A1, "A1", 5, 3), //Yellow (Middle)
-////  Dispenser( 3, A6, "A6", A2, "A2", 5, 4)  //Red (right)
-//};
 //
 size_t n;
 
