@@ -13,7 +13,7 @@ double analogThrustedRead(int pin) {
   int count = 10;
   double value = 0;
   for (int i = 0; i < count; i++) {
-    value += analogRead_(pin);
+    value += analogRead(pin);
     delay(10);
   }
   return (int)(value / count);

@@ -22,7 +22,7 @@ void setup()
 
 void loop() {
   size_t n = sizeof(dispensers) / sizeof(dispensers[0]);
-  int totDelay = 0;
+  int totDelay = 0; 
   for (int i = 0; i < n; i++) {
     totDelay += dispensers[i].update();
   }
