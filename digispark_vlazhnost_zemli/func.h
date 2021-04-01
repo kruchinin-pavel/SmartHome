@@ -64,17 +64,17 @@ class NormalizedAnalogVal {
   private:
     int nomalize(double sens) {
       return sens;
-//      if (sens > 0) {
-//        if (sens < sensMin) sensMin = sens;
-//        if (sens > sensMax) sensMax = sens;
-//      }
-//      if (sens > sensMax){
-//        return sensMax;
-//      }
-//      if (sens < sensMin){
-//        return sensMin;
-//      }
-//      return (sens - sensMin) * 1024 / (sensMax - sensMin + 1);
+      //      if (sens > 0) {
+      //        if (sens < sensMin) sensMin = sens;
+      //        if (sens > sensMax) sensMax = sens;
+      //      }
+      //      if (sens > sensMax){
+      //        return sensMax;
+      //      }
+      //      if (sens < sensMin){
+      //        return sensMin;
+      //      }
+      //      return (sens - sensMin) * 1024 / (sensMax - sensMin + 1);
     };
 };
 
@@ -84,6 +84,7 @@ class Dispenser {
     int id, nextPump, pumpPin, ledPin;
     String res;
     String v;
+    int dispenseCounter = 0;
   public:
     Dispenser(int id, int rheoPin, String rheoPinStr, int sensPin, String sensPinStr, int pumpPin, int ledPin) {
       this->id = id;
@@ -110,6 +111,7 @@ class Dispenser {
         ret = blinkPin(ledPin, 1000, 0);
         if (nextPump-- <= 0) {
           ret += blinkPin(pumpPin, 4500, 0);
+          dispenseCounter += 1;
           nextPump = 30 * 60;
           v = " pmp ";
         } else {
@@ -135,6 +137,8 @@ class Dispenser {
         res += "r";
         res += rheo.toString();
       }
+      res += " ";
+      res += dispenseCounter;
       res += ";\t";
       this->res = res;
       return this->res;
