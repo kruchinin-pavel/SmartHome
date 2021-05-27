@@ -7,15 +7,23 @@
 // Полив цветков (помп)
 //(id, rheoPin, rheoPinStr, sensPin, sensPinStr, ledPin, pumpPin) {
 //Dispenser dispensers[] = {
+// Плата макетная
 //  PumpDispenser( 1, A5, "A5", A4, "A4", 2, 7), //Blue (left)
 //  PumpDispenser( 2, A7, "A7", A3, "A3", 3, 6), //Yellow (Middle)
 //  PumpDispenser( 3, A6, "A6", A2, "A2", 4, 5) //Red (right)
 //};
+
+// Плата текстолитовая
+Dispenser *dispensers[] = {
+  new PumpDispenser( 1, A0, "A0", A4, "A4", 5, 7), //Blue (left)
+  new PumpDispenser( 2, A7, "A7", A3, "A3", 3, 6), //Green (Middle)
+  new PumpDispenser( 3, A6, "A6", A2, "A2", 4, 5) //White (right)
+};
 //*****************************************************************
 // Полив теплицы (кран)
-Dispenser *dispensers[] = {
-  new CraneDispenser( 1, A1, "A1", A4, "A4", 4, 2, 3) //Blue (left)
-};
+//Dispenser *dispensers[] = {
+//  new CraneDispenser( 1, A1, "A1", A4, "A4", 4, 2, 3) //Blue (left)
+//};
 //*****************************************************************
 size_t n;
 String msg;
