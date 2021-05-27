@@ -11,13 +11,13 @@ int blinkPin(int pin, int highMs, int lowMs) {
 }
 
 double analogThrustedRead(int pin) {
-  int count = 10;
+  int count = 50;
   double value = 0;
   for (int i = 0; i < count; i++) {
     value += analogRead_(pin);
     delay(10);
   }
-  return (int)(value / count);
+  return (value / count);
 }
 
 
@@ -53,6 +53,7 @@ class NormalizedAnalogVal {
       pinMode(pin, INPUT);
       Serial.print(pinStr);
       Serial.println(" made INPUT");
+      
     }
 
     String toString() {
@@ -171,7 +172,7 @@ class CraneDriver {
       if (is_open != 1) {
         is_open = 1;
         Serial.println("Closing crane");
-//        switch_crane(pin1, pin2, LOW, HIGH);
+        switch_crane(pin1, pin2, LOW, HIGH);
       }
     }
 
@@ -179,7 +180,7 @@ class CraneDriver {
       if (is_open != 0) {
         is_open = 0;
         Serial.println("Open crane");
-//        switch_crane(pin1, pin2, HIGH, LOW);
+        switch_crane(pin1, pin2, HIGH, LOW);
       }
     }
 
@@ -197,12 +198,14 @@ class CraneDriver {
       write_pin(p2, s2);
     }
     void write_pin(int pin, int s) {
+      #ifdef DEBUG_D
       String str = "Write: ";
       str += pin;
       str += " = ";
       str += s;
       str += "; ";
       Serial.println(str);
+      #endif
       digitalWrite(pin, s);
       return str;
     }
