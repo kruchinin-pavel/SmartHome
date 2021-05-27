@@ -2,6 +2,7 @@
 //#include "digispark.h"
 #include "arduino.h"
 #include "func.h"
+//#define DEBUG_D
 
 //*****************************************************************
 // Полив цветков (помп)
@@ -45,7 +46,7 @@ void loop() {
     totDelay += dispensers[i]->update();
   }
   if (1000 > totDelay) delay(1000 - totDelay);
-#ifdef ARDUINO
+#ifdef DEBUG_D
   msg = "";
   for (int i = 0; i < n; i++) {
     msg += dispensers[i]->toString();
