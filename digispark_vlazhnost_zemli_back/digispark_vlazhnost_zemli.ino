@@ -3,26 +3,22 @@
 #include "arduino.h"
 #include "func.h"
 #define DEBUG_D
-#include "multiplexor.h"
-int humidity_1;
-int humidity_2;  
-int humidity_3;  
 
 //*****************************************************************
 // Полив цветков (помп)
 //(id, rheoPin, rheoPinStr, sensPin, sensPinStr, ledPin, pumpPin) {
 //Dispenser dispensers[] = {
 // Плата макетная
-//  PumpDispenser( 1, A5, "A5", A4, "A4", , 7), //Blue (left)
+//  PumpDispenser( 1, A5, "A5", A4, "A4", 2, 7), //Blue (left)
 //  PumpDispenser( 2, A7, "A7", A3, "A3", 3, 6), //Yellow (Middle)
 //  PumpDispenser( 3, A6, "A6", A2, "A2", 4, 5) //Red (right)
 //};
 
 // Плата текстолитовая
 Dispenser *dispensers[] = {
-  new PumpDispenser(1, A0, "A0", humidity_1, "A4", 6, 7), //Blue (left)
-  new PumpDispenser( 2, A7, "A7", humidity_2, "A2", 3, 6), //Green (Middle)
-  new PumpDispenser( 3, A6, "A6", humidity_1, "A1", 8, 5) //White (right)
+  new PumpDispenser( 1, A0, "A0", A4, "A4", 6, 7), //Blue (left)
+  new PumpDispenser( 2, A7, "A7", A2, "A2", 3, 6), //Green (Middle)
+  new PumpDispenser( 3, A6, "A6", A1, "A1", 8, 5) //White (right)
 };
 //*****************************************************************
 // Полив теплицы (кран)

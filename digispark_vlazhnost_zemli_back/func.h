@@ -1,4 +1,4 @@
-#ifndef  func_h
+#ifndef func_h
 #define func_h 1
 
 
@@ -150,7 +150,7 @@ class Dispenser  {
       rheo.init();
       sens.init();
     };
-    void blink(int highMs, int lowMs, int count ) {
+    void blink(int highMs, int lowMs, int count) {
       for (int i = 0; i < count; i++) blinkPin(ledPin, highMs, lowMs);
     }
 
