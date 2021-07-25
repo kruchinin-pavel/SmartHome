@@ -142,8 +142,8 @@ class Dispenser  {
   protected:
     int id, ledPin;
     String to_string;
-    const NormalizedAnalogVal  rheo, sens;
-    virtual void _init() const {
+    NormalizedAnalogVal  rheo, sens;
+    virtual void _init() {
       Serial.println("Dispenser init");
       pinMode(ledPin, OUTPUT);
       digitalWrite(ledPin, LOW);
@@ -207,7 +207,6 @@ class CraneDriver {
       Serial.println(str);
       #endif
       digitalWrite(pin, s);
-      return str;
     }
 
 };
@@ -223,7 +222,7 @@ class CraneDispenser : public Dispenser, CraneDriver {
 
 
   protected:
-    virtual void _init() const override {
+    virtual void _init() override {
       Dispenser::_init();
       CraneDriver::_init();
     }
