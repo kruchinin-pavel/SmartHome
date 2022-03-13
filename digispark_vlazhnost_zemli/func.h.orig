@@ -24,7 +24,12 @@ double analogThrustedRead(int pin) {
 class NormalizedAnalogVal {
     int pin;
     String pinStr, toStringVal;
+<<<<<<< HEAD
     int sens = -1, sensMax = 600, sensMin = 400;
+=======
+    double sens = -1, sensMax = 600, sensMin = 400;
+    double currToCompare = -1;
+>>>>>>> master
   public:
     NormalizedAnalogVal() {}
 
@@ -35,7 +40,27 @@ class NormalizedAnalogVal {
       this->sensMin = minVal;
     };
 
+<<<<<<< HEAD
     int getVal() {
+=======
+    boolean lt(double level) {
+      if (getVal() - currToCompare > 50) {
+        currToCompare = -1;
+      }
+      double cmp = currToCompare == -1 ? getVal() : currToCompare;
+      if (cmp <= level) {
+        if (currToCompare == -1 || cmp > getVal() ) {
+          currToCompare = cmp - 25;
+        }
+        return true;
+      } else {
+        currToCompare = -1;
+      }
+      return false;
+    }
+
+    double getVal() {
+>>>>>>> master
       return sens;
     }
 
@@ -72,7 +97,22 @@ class NormalizedAnalogVal {
 
   private:
     int nomalize(double sens) {
+<<<<<<< HEAD
       return (int)sens;
+=======
+      return sens;
+      //      if (sens > 0) {
+      //        if (sens < sensMin) sensMin = sens;
+      //        if (sens > sensMax) sensMax = sens;
+      //      }
+      //      if (sens > sensMax) {
+      //        return sensMax;
+      //      }
+      //      if (sens < sensMin) {
+      //        return sensMin;
+      //      }
+      //      return (sens - sensMin) * 1024 / (sensMax - sensMin + 1);
+>>>>>>> master
     };
 };
 
@@ -104,6 +144,7 @@ class Dispenser  {
       rheo.readVal();
       sens.readVal();
       int ret = 0;
+<<<<<<< HEAD
       switch (mode) {
         case Dispensing:
           ret += blinkPin(ledPin, 500, 500);
@@ -119,6 +160,23 @@ class Dispenser  {
             mode = Dispensing;
           }
           break;
+=======
+      if (rheo.lt(sens.getVal())) {
+        ret = blinkPin(ledPin, 1000, 0);
+        if (nextPump-- <= 0) {
+          ret += blinkPin(pumpPin, 3000, 0);
+          nextPump = 30 * 60;
+          v = " pmp ";
+        } else {
+          v = " w";
+          v += nextPump;
+        }
+        v += " ";
+      } else {
+        ret = blinkPin(ledPin, 10, 0);
+        nextPump = 3;
+        v = " oki ";
+>>>>>>> master
       }
       return ret;
     };
