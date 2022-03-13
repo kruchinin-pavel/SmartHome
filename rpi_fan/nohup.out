@@ -1,0 +1,10 @@
+/home/krucpav/PycharmProjects/raspberry/rpi_fan/./cool.py:21: RuntimeWarning: No channels have been set up yet - nothing to clean up!  Try cleaning up at the end of your program instead!
+  GPIO.cleanup()  # resets all GPIO ports used by this program
+/home/krucpav/PycharmProjects/raspberry/rpi_fan/./cool.py:16: RuntimeWarning: This channel is already in use, continuing anyway.  Use GPIO.setwarnings(False) to disable warnings.
+  GPIO.setup(pin, GPIO.OUT)
+/home/krucpav/PycharmProjects/raspberry/rpi_fan/./cool.py:21: RuntimeWarning: No channels have been set up yet - nothing to clean up!  Try cleaning up at the end of your program instead!
+  GPIO.cleanup()  # resets all GPIO ports used by this program
+/home/krucpav/PycharmProjects/raspberry/rpi_fan/./cool.py:16: RuntimeWarning: This channel is already in use, continuing anyway.  Use GPIO.setwarnings(False) to disable warnings.
+  GPIO.setup(pin, GPIO.OUT)
+/home/krucpav/PycharmProjects/raspberry/rpi_fan/./cool.py:21: RuntimeWarning: No channels have been set up yet - nothing to clean up!  Try cleaning up at the end of your program instead!
+  GPIO.cleanup()  # resets all GPIO ports used by this program
