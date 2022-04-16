@@ -32,9 +32,9 @@ struct Input {
       int val = getVal();
       int cmpVal = than + (lastLowerThan ? treshold : - treshold);
       if (cmpVal < 0 || cmpVal > 1000) cmpVal = than;
-      if (lastLowerThan && val > cmpVal) {
+      if (val > cmpVal) {
         lastLowerThan = false;
-      } if (!lastLowerThan && val < cmpVal) {
+      } if (val < cmpVal) {
         lastLowerThan = true;
       }
       return lastLowerThan;
@@ -103,6 +103,10 @@ struct ExtRegulatedDispenser {
       sens.readVal();
       int ret = 0;
       if (sens.lower_than(reoVal)) {
+        ret += ledPin.blink(10);
+        nextPump = 3;
+        v = " oki ";
+      } else {
         ret += ledPin.blink(1000);
         if (nextPump-- <= 0) {
           ret += pumpPin.blink(3000);
@@ -113,10 +117,6 @@ struct ExtRegulatedDispenser {
           v += nextPump;
         }
         v += " ";
-      } else {
-        ret += ledPin.blink(10);
-        nextPump = 3;
-        v = " oki ";
       }
       Serial.println(toString());
       return ret;

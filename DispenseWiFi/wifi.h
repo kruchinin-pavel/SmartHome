@@ -6,8 +6,6 @@
 
 
 void setup_wifi() {
-  delay(1000);
-  Serial.begin(115200);
   Serial.println();
   Serial.println("Configuring access point...");
   /* You can remove the password parameter if you want the AP to be open. */
