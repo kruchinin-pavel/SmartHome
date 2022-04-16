@@ -5,7 +5,7 @@
 #include "credentials.h"
 #include "func.h"
 
-ExtRegualtedDispenser disp{ 1, A0, "A0", 7, 2};
+ExtRegulatedDispenser disp{ 1, A0, "A0", D1, LED_BUILTIN};
 
 
 /** Wifi config page handler */

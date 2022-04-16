@@ -21,7 +21,7 @@
 
 /* Set these to your desired softAP credentials. They are not configurable at runtime */
 #ifndef APSSID
-#define APSSID "Dispenser_ap"
+#define APSSID "Palm_Dispenser"
 #define APPSK  "12345678"
 #endif
 
@@ -29,7 +29,7 @@ const char *softAP_ssid = APSSID;
 const char *softAP_password = APPSK;
 
 /* hostname for mDNS. Should work at least on windows. Try http://esp8266.local */
-const char *myHostname = "esp8266";
+const char *myHostname = "palm_disp";
 
 /* Don't set this wifi credentials. They are configurated at runtime and stored on EEPROM */
 char ssid[33] = "";
