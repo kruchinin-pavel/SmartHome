@@ -22,22 +22,34 @@ void handleDispencer() {
             "<h1>HELLO FROM DISPENSER!123!</h1>")
           + String(F("<p>Current level of input: ")) + analogRead(A0) + F("</p>")
           + String(F("<p>Current level of hummidity: ")) + disp.getReo() + F("</p>")
+          + String(F("<p>Pump done count: ")) + disp.getPumpCount() + F("</p>")
           ;
   Page += F("<p>You may want to <a href='/wifi'>config the wifi connection</a>.</p>");
   Page += String(F("<br /><form method='POST' action='dispSave'><h4>Setup humidity level(0-1024):</h4>"
                    "<input type='text' placeholder='humidity' name='humid' value='")) + disp.getReo() + String("'/>"
-                       "<br /><input type='submit' value='Setup'/></form>"
-                       "</body></html>");
+                       "<br /><input type='submit' value='Setup'/></form>");
+  Page += "<br /><form method='POST' action='doPump'><input type='submit' value='do pump'/></form>";
+  Page += "</body></html>";
+
   server.send(200, "text/html", Page);
 }
 
+void handleDispencerDoPump() {
+  disp.doPump();
+  server.sendHeader("Location", "disp", true);
+  server.sendHeader("Cache-Control", "no-cache, no-store, must-revalidate");
+  server.sendHeader("Pragma", "no-cache");
+  server.sendHeader("Expires", "-1");
+  server.send(302, "text/plain", "");    // Empty content inhibits Content-length header so we have to close the socket ourselves.
+  server.client().stop(); // Stop is needed because we sent no content length
+}
 
 void handleDispencerSetupLevel() {
   int humidity_limit = server.arg("humid").toInt();
   disp.setReo(humidity_limit);
   humidityLevel = humidity_limit;
   saveCredentials();
-  server.sendHeader("Location", "wifi", true);
+  server.sendHeader("Location", "disp", true);
   server.sendHeader("Cache-Control", "no-cache, no-store, must-revalidate");
   server.sendHeader("Pragma", "no-cache");
   server.sendHeader("Expires", "-1");
@@ -49,5 +61,6 @@ void initDispenser() {
   disp.setReo(humidityLevel);
   server.on("/disp", handleDispencer);
   server.on("/dispSave", handleDispencerSetupLevel);
+  server.on("/doPump", handleDispencerDoPump);
 }
 #endif

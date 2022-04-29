@@ -99,6 +99,15 @@ struct ExtRegulatedDispenser {
       return this->reoVal;
     }
 
+    int doPump() {
+      pumpCount++;
+      return pumpPin.blink(3000);
+    }
+
+    int getPumpCount() const {
+      return pumpCount;
+    }
+    
     int update() {
       sens.readVal();
       int ret = 0;
@@ -109,7 +118,7 @@ struct ExtRegulatedDispenser {
       } else {
         ret += ledPin.blink(1000);
         if (nextPump-- <= 0) {
-          ret += pumpPin.blink(3000);
+          ret += doPump();
           nextPump = 30 * 60;
           v = " pmp ";
         } else {
@@ -134,6 +143,7 @@ struct ExtRegulatedDispenser {
       return this->res;
     }
   private:
+    int pumpCount = 0;
     Input  sens;
     const int id;
     const Output ledPin, pumpPin;
