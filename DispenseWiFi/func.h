@@ -86,36 +86,56 @@ struct Input {
     bool lastLowerThan = false;
 };
 
+struct AbstractDriver {
+    virtual int do_open() = 0, do_close() = 0, do_update() = 0;
+};
+
+
 struct ExtRegulatedDispenser {
-    ExtRegulatedDispenser(int id, int sensPin, String sensPinStr, int pumpPin, int ledPin):
-      reoVal{1}, ledPin{ledPin, true}, id{id}, pumpPin{pumpPin}, sens{sensPin, sensPinStr, 13} {
+    ExtRegulatedDispenser(int id, int sensPin, String sensPinStr, int ledPin, AbstractDriver &driver):
+      reoValMax{1}, reoValMin{1}, ledPin{ledPin, true}, id{id}, sens{sensPin, sensPinStr, 13}, driver{driver} {
+
     };
 
     void setReo(int val) {
-      this->reoVal = val;
+      this->reoValMax = val;
+      this->reoValMin = val;
     }
 
-    int getReo() const {
-      return this->reoVal;
+    void setReoMax(int val) {
+      this->reoValMax = val;
     }
+
+    void setReoMin(int val) {
+      this->reoValMin = val;
+    }
+
+    int getReoMax() const {
+      return this->reoValMax;
+    }
+
+    int getReoMin() const {
+      return this->reoValMin;
+    }
+
 
     int doPump() {
       pumpCount++;
-      return pumpPin.blink(3000);
+      return driver.do_open();
     }
 
     int getPumpCount() const {
       return pumpCount;
     }
-    
+
     int update() {
       sens.readVal();
       int ret = 0;
-      if (sens.lower_than(reoVal)) {
+      if (sens.getVal() < reoValMin) {
         ret += ledPin.blink(10);
         nextPump = 3;
         v = " oki ";
-      } else {
+      } else if (sens.getVal() > reoValMax) {
         ret += ledPin.blink(1000);
         if (nextPump-- <= 0) {
           ret += doPump();
@@ -127,6 +147,7 @@ struct ExtRegulatedDispenser {
         }
         v += " ";
       }
+      v += this->driver.do_update();
       Serial.println(toString());
       return ret;
     };
@@ -142,15 +163,86 @@ struct ExtRegulatedDispenser {
       this->res = res;
       return this->res;
     }
+
+    ~ExtRegulatedDispenser() {
+      delete this->driver;
+    }
   private:
     int pumpCount = 0;
     Input  sens;
     const int id;
-    const Output ledPin, pumpPin;
-    int nextPump, reoVal;
+    const Output ledPin;
+    AbstractDriver &driver;
+    int nextPump, reoValMax, reoValMin;
     String res, v;
 };
 
 
+struct CraneDriver : AbstractDriver {
+    CraneDriver(int pin1, int pin2) {
+      this->pin1 = pin1;
+      this->pin2 = pin2;
+      str.reserve(128);
+      pinMode(pin1, OUTPUT);
+      pinMode(pin2, OUTPUT);
+      switch_crane(pin1, pin2, LOW, LOW);
+    }
+
+    virtual int do_close() {
+      if (is_open != 1) {
+        is_open = 1;
+        Serial.println("Closing crane");
+        switch_crane(pin1, pin2, LOW, HIGH);
+      }
+    }
+
+    int do_open() {
+      if (is_open != 0) {
+        is_open = 0;
+        Serial.println("Open crane");
+        switch_crane(pin1, pin2, HIGH, LOW);
+      }
+    }
+
+  private:
+
+    void switch_crane(int p1, int p2, int s1, int s2) {
+      write_pin(p1, s1);
+      write_pin(p2, s2);
+    }
+    void write_pin(int pin, int s) {
+#ifdef DEBUG_D
+      String str = "Write: ";
+      str += pin;
+      str += " = ";
+      str += s;
+      str += "; ";
+      Serial.println(str);
+#endif
+      digitalWrite(pin, s);
+    }
+
+    int pin1, pin2;
+    int is_open = -1;
+    String str;
+};
+
+struct PumpDriver : AbstractDriver {
+
+    CraneDriver(int pin): pump{pin} {
+    }
+
+    virtual int do_close() {
+
+    }
+
+    virtual int do_open() {
+      return pump.blink(3000);
+    }
+
+  private:
+    const Output pump;
+
+};
 
 #endif
