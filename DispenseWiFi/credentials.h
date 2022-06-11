@@ -10,7 +10,8 @@ void loadCredentials() {
   EEPROM.get(0 + sizeof(ssid), password);
   char ok[2 + 1];
   EEPROM.get(0 + sizeof(ssid) + sizeof(password), ok);
-  EEPROM.get(0 + sizeof(ssid) + sizeof(password) + sizeof(ok), humidityLevel);
+  EEPROM.get(0 + sizeof(ssid) + sizeof(password) + sizeof(ok), humidityLevelMin);
+  EEPROM.get(0 + sizeof(ssid) + sizeof(password) + sizeof(ok) + sizeof(humidityLevelMin), humidityLevelMax);
   EEPROM.end();
   if (String(ok) != String("OK")) {
     ssid[0] = 0;
@@ -20,7 +21,9 @@ void loadCredentials() {
   Serial.println(ssid);
   Serial.println(strlen(password) > 0 ? "********" : "<no password>");
   Serial.print("Hum level: ");
-  Serial.println( humidityLevel);
+  Serial.println( humidityLevelMin);
+  Serial.print(" - ");
+  Serial.println( humidityLevelMax);
 }
 
 /** Store WLAN credentials to EEPROM */
@@ -30,7 +33,8 @@ void saveCredentials() {
   EEPROM.put(0 + sizeof(ssid), password);
   char ok[2 + 1] = "OK";
   EEPROM.put(0 + sizeof(ssid) + sizeof(password), ok);
-  EEPROM.put(0 + sizeof(ssid) + sizeof(password) + sizeof(ok), humidityLevel);
+  EEPROM.put(0 + sizeof(ssid) + sizeof(password) + sizeof(ok), humidityLevelMin);
+  EEPROM.put(0 + sizeof(ssid) + sizeof(password) + sizeof(ok) + sizeof(humidityLevelMin), humidityLevelMax);
   EEPROM.commit();
   EEPROM.end();
 }

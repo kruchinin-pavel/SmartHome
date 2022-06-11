@@ -56,6 +56,7 @@ unsigned long lastConnectTry = 0;
 /** Current WLAN status */
 unsigned int status = WL_IDLE_STATUS;
 
-unsigned int humidityLevel = 100000;
+unsigned int humidityLevelMin = 100000;
+unsigned int humidityLevelMax = 100000;
 
 #endif
