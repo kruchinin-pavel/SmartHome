@@ -5,8 +5,8 @@
 #include "credentials.h"
 #include "func.h"
 
-PumpDriver pump{D1};
-ExtRegulatedDispenser disp{ 1, A0, "A0", LED_BUILTIN, &pump};
+PumpDriver link{D1};
+ExtRegulatedDispenser disp( 1, A0, "A0", LED_BUILTIN, link);
 
 
 /** Wifi config page handler */
@@ -77,11 +77,13 @@ void handleDispencerSetupLevel() {
 }
 
 void initDispenser() {
+  Serial.print("initDispenser");
   disp.setReoMin(humidityLevelMin);
   disp.setReoMax(humidityLevelMax);
   server.on("/disp", handleDispencer);
   server.on("/dispSave", handleDispencerSetupLevel);
   server.on("/doPump", handleDispencerDoPump);
   server.on("/stopPump", handleDispencerStopPump);
+  Serial.println("...(done)");
 }
 #endif

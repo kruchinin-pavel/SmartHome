@@ -76,11 +76,9 @@ struct AbstractDriver {
   virtual String get_state() = 0;
 };
 
-
 struct ExtRegulatedDispenser {
-    ExtRegulatedDispenser(int id, int sensPin, String sensPinStr, int ledPin, AbstractDriver *driver):
+    ExtRegulatedDispenser(int id, int sensPin, String sensPinStr, int ledPin, AbstractDriver &driver):
       reoValMax{1}, reoValMin{1}, ledPin{ledPin, true}, id{id}, sens{sensPin, sensPinStr}, driver{driver} {
-
     };
 
     int getCurrent() {
@@ -113,30 +111,32 @@ struct ExtRegulatedDispenser {
 
 
     int doPump() {
-      return driver->do_open();
+      return driver.do_open();
     }
 
     int stopPump() {
-      Serial.println("stopPump");
-      return driver->do_close();
+      auto var = driver.do_close();
+      return var;
     }
 
-    String getState() const {
-      return driver->get_state();
+    String getState()  {
+      return driver.get_state();
     }
 
     int update() {
+      if (reoValMax <= reoValMin) {
+        reoValMin = reoValMax;
+      }
       sens.readVal();
       int ret = 0;
       if (sens.getVal() < reoValMin) {
         ret += ledPin.blink(10);
-        Serial.println("Call stop pump");
         ret += stopPump();
       } else if (sens.getVal() > reoValMax) {
         ret += ledPin.blink(1000);
-//        ret += doPump();
+        //        ret += doPump();
       }
-      v += driver->do_update();
+      v += driver.do_update();
       //Serial.println(toString());
       return ret;
     };
@@ -157,16 +157,16 @@ struct ExtRegulatedDispenser {
     }
 
     ~ExtRegulatedDispenser() {
-      delete driver;
     }
   private:
     Input  sens;
     const int id;
     const Output ledPin;
-    AbstractDriver *driver;
+    AbstractDriver &driver;
     int reoValMax, reoValMin;
     String res, v;
 };
+
 
 
 struct CraneDriver : AbstractDriver {
@@ -182,8 +182,10 @@ struct CraneDriver : AbstractDriver {
     virtual int do_close() {
       if (is_open != 1) {
         is_open = 1;
-        Serial.println("Closing crane");
+        Serial.println("do_close: Closing crane.");
         switch_crane(pin1, pin2, LOW, HIGH);
+      } else {
+        Serial.println("do_close: Already closed.");
       }
     }
 
@@ -227,19 +229,20 @@ struct PumpDriver : AbstractDriver {
     PumpDriver(int pin): pump{pin} {
     }
 
-    virtual int do_close() {
+    int do_close() override {
       pumping = false;
+      return 0;
     }
 
-    virtual int do_open() {
-      
+    int do_open() override {
       if (!pumping) {
         pumping = true;
         nextPump = 0;
       }
+      return 0;
     }
 
-    virtual int do_update() {
+    int do_update() override {
       if (!pumping) {
         return 0;
       }
@@ -252,7 +255,7 @@ struct PumpDriver : AbstractDriver {
       return ret;
     }
 
-    String get_state() {
+    String get_state() override {
       if (pumping) {
         state = String("open(") + pumpCount + ")";
       } else   {
@@ -273,5 +276,6 @@ struct PumpDriver : AbstractDriver {
     int nextPump, pumpCount;
     bool pumping;
 };
+
 
 #endif
