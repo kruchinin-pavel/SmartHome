@@ -83,6 +83,9 @@ void handleWifi() {
       "<tr><td>IP ") +
     toStringIp(WiFi.localIP()) +
     F("</td></tr>"
+      "<tr><td>mqtt_server ") +
+    toStringIp(mqtt_server) +
+    F("</td></tr>"
       "</table>"
       "\r\n<br />"
       "<table><tr><th align='left'>WLAN list (refresh if any missing)</th></tr>");
@@ -102,8 +105,11 @@ void handleWifi() {
             "<input type='text' placeholder='network' name='n'/>"
             "<br /><input type='password' placeholder='password' name='p'/>"
             "<br /><input type='submit' value='Connect/Disconnect'/></form>"
-            "<p>You may want to <a href='/'>return to the home page</a>.</p>"
-            "</body></html>");
+            "\r\n<br /><form method='POST' action='mqttsave'><h4>Connect to MQTT:</h4>"
+            "<input type='MQTT Broker ip' placeholder='")+mqtt_server.toString()+"' name='mqtt'/>"+
+            "<br /><input type='submit' value='Set MQTT'/></form>"+
+            "<p>You may want to <a href='/'>return to the home page</a>.</p>"+
+            "</body></html>";
   server.send(200, "text/html", Page);
   server.client().stop(); // Stop is needed because we sent no content length
 }
@@ -113,6 +119,10 @@ void handleWifiSave() {
   Serial.println("wifi save");
   server.arg("n").toCharArray(ssid, sizeof(ssid) - 1);
   server.arg("p").toCharArray(password, sizeof(password) - 1);
+  char mqtt[256];
+  server.arg("mqtt").toCharArray(mqtt, sizeof(password) - 1);
+  uint8_t ip[4];
+  sscanf(mqtt, "%u.%u.%u.%u", &ip[0], &ip[1], &ip[2], &ip[3]);
   server.sendHeader("Location", "wifi", true);
   server.sendHeader("Cache-Control", "no-cache, no-store, must-revalidate");
   server.sendHeader("Pragma", "no-cache");
@@ -122,6 +132,29 @@ void handleWifiSave() {
   saveCredentials();
   connect = strlen(ssid) > 0; // Request WLAN connect with new credentials if there is a SSID
 }
+
+/** Handle the WLAN save form and redirect to WLAN config page again */
+void handleMqttSave() {
+  Serial.println("mqtt save");
+  char mqtt[256];
+  
+  
+  server.arg("mqtt").toCharArray(mqtt, sizeof(mqtt) - 1);
+  
+  mqtt_server.fromString(mqtt);
+  Serial.print("Setup new MQTT SERVER: ");
+  Serial.print(mqtt_server);
+  server.sendHeader("Location", "wifi", true);
+  server.sendHeader("Cache-Control", "no-cache, no-store, must-revalidate");
+  server.sendHeader("Pragma", "no-cache");
+  server.sendHeader("Expires", "-1");
+  server.send(302, "text/plain", "");    // Empty content inhibits Content-length header so we have to close the socket ourselves.
+  server.client().stop(); // Stop is needed because we sent no content length
+  saveCredentials();
+  connect = strlen(ssid) > 0; // Request WLAN connect with new credentials if there is a SSID
+}
+
+
 
 void handleNotFound() {
   if (captivePortal()) { // If caprive portal redirect instead of displaying the error page.

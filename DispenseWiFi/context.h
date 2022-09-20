@@ -45,7 +45,7 @@ ESP8266WebServer server(80);
 /* Soft AP network parameters */
 IPAddress apIP(172, 217, 28, 1);
 IPAddress netMsk(255, 255, 255, 0);
-
+IPAddress mqtt_server{ 192, 168, 2, 42 };  // ip адресс mqtt сервера
 
 /** Should I connect to WLAN asap? */
 boolean connect;
@@ -59,4 +59,5 @@ unsigned int status = WL_IDLE_STATUS;
 unsigned int humidityLevelMin = 100000;
 unsigned int humidityLevelMax = 100000;
 
+WiFiClient wifiClient;
 #endif

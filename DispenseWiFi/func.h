@@ -158,6 +158,7 @@ struct ExtRegulatedDispenser {
 
     ~ExtRegulatedDispenser() {
     }
+
   private:
     Input  sens;
     const int id;
