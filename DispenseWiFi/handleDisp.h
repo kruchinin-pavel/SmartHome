@@ -15,14 +15,15 @@ void handleDispencer() {
   server.sendHeader("Expires", "-1");
   String Page;
 
-  Page += F(
+  Page += String(
             "<!DOCTYPE html><html lang='en'><head>"
             "<meta name='viewport' content='width=device-width'>"
             "<title>CaptivePortal</title></head><body>"
             "<h1>HELLO FROM DISPENSER!123!</h1>")
-          + String(F("<p>Current level of input: ")) + analogRead(A0) + F("</p>")
-          + String(F("<p>Current level of hummidity: ")) + disp.getReo() + F("</p>")
-          + String(F("<p>Pump done count: ")) + disp.getPumpCount() + F("</p>")
+            
+          + "<p>Current level of input: " + String(analogRead(A0)) + "</p>"
+          + "<p>Current level of hummidity: " + String(disp.getReo()) + "</p>"
+          + "<p>Pump done count: " + String(disp.getPumpCount()) + "</p>"
           ;
   Page += F("<p>You may want to <a href='/wifi'>config the wifi connection</a>.</p>");
   Page += String(F("<br /><form method='POST' action='dispSave'><h4>Setup humidity level(0-1024):</h4>"
