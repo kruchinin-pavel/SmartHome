@@ -3,6 +3,7 @@
 #include "func.h"
 #include "wifi.h"
 
+
 void setup() {
   delay(1000);
   Serial.begin(115200);
@@ -18,4 +19,5 @@ void loop() {
   if (tot_delay > 0) {
     delay(tot_delay);
   }
+  check_sleep();
 }
