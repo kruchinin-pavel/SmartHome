@@ -1,226 +1,143 @@
 #if not defined(FUNC_H)
 #define FUNC_H 1
 
-int blinkPin(int pin, int highMs, int lowMs) {
-  digitalWrite(pin, HIGH);
-  delay(highMs);
-  digitalWrite(pin, LOW);
-  if (lowMs > 0)   delay(lowMs);
-  return highMs + lowMs;
-}
-
-double analogThrustedRead(int pin) {
-  int count = 10;
-  double value = 0;
-  for (int i = 0; i < count; i++) {
-    value += analogRead_(pin);
-    delay(10);
-  }
-  return (int)(value / count);
-}
+struct Output {
+    Output(int pin): Output{pin, false} {};
+    Output(int pin, bool inversed): inversed{inversed}, pin{pin} {
+      pinMode(pin, OUTPUT);
+    };
+    int blink(int ms) const {
+      digitalWrite(pin, (inversed ? LOW : HIGH));
+      delay(ms);
+      digitalWrite(pin, (inversed ? HIGH : LOW));
+      return ms;
+    };
+  private:
+    const bool inversed;
+    const int pin;
+};
 
 
-class NormalizedAnalogVal {
-    int pin;
-    String pinStr, toStringVal;
-    double sens = -1, sensMax = 600, sensMin = 400;
-    double currToCompare = -1;
-  public:
-    NormalizedAnalogVal() {}
+struct Input {
+    Input(): Input{ -1, ""} {
 
-    NormalizedAnalogVal(int pin, String pinStr, double maxVal, double minVal) {
-      this->pin = pin;
-      this->pinStr = pinStr;
-      this->sensMax = maxVal;
-      this->sensMin = minVal;
+    }
+    Input(int pin, String pinStr): pin{pin}, pinStr{pinStr} {
+      pinMode(pin, INPUT);
+      Serial.print(pinStr);
+      Serial.println(" made INPUT");
     };
 
-    boolean lt(double level) {
-      if (getVal() - currToCompare > 50) {
-        currToCompare = -1;
-      }
-      double cmp = currToCompare == -1 ? getVal() : currToCompare;
-      if (cmp <= level) {
-        if (currToCompare == -1 || cmp > getVal() ) {
-          currToCompare = cmp - 25;
-        }
-        return true;
-      } else {
-        currToCompare = -1;
-      }
-      return false;
-    }
 
-    double getVal() {
+    double getVal() const {
       return sens;
-    }
-
-    double getCmpVal() {
-      return currToCompare ;
     }
 
     void readVal() {
       if (enabled()) {
-        sens = nomalize(analogThrustedRead(pin));
+        sens = nomalize(analogThrustedRead());
       }
     };
-
-    boolean enabled() {
-      return pin > 0;
-    }
-
-    void init() {
-      pinMode(pin, INPUT);
-      Serial.print(pinStr);
-      Serial.println(" made INPUT");
-    }
 
     String toString() {
       toStringVal = pinStr;
       toStringVal += "=";
       toStringVal += sens;
-      toStringVal += "(";
-      toStringVal += currToCompare;
-      toStringVal += ")";
       return toStringVal;
     }
 
   private:
+    boolean enabled() const {
+      return pin > 0;
+    }
+
+
     int nomalize(double sens) {
       return sens;
-      //      if (sens > 0) {
-      //        if (sens < sensMin) sensMin = sens;
-      //        if (sens > sensMax) sensMax = sens;
-      //      }
-      //      if (sens > sensMax) {
-      //        return sensMax;
-      //      }
-      //      if (sens < sensMin) {
-      //        return sensMin;
-      //      }
-      //      return (sens - sensMin) * 1024 / (sensMax - sensMin + 1);
     };
+
+    double analogThrustedRead() {
+      int count = 10;
+      double value = 0;
+      for (int i = 0; i < count; i++) {
+        value += analogRead_(pin);
+        delay(10);
+      }
+      return (int)(value / count);
+    }
+    const int pin;
+    const String pinStr;
+    String toStringVal;
+    double sens = -1;
 };
 
-class Dispenser {
-    NormalizedAnalogVal  rheo;
-    NormalizedAnalogVal  sens;
-    int id, nextPump, pumpPin, ledPin;
-    String res;
-    String v;
-  public:
-    Dispenser(int id, int rheoPin, String rheoPinStr, int sensPin, String sensPinStr, int pumpPin, int ledPin) {
-      this->id = id;
-      sens = NormalizedAnalogVal(sensPin, sensPinStr, 700., 400.);
-      rheo = NormalizedAnalogVal(rheoPin, rheoPinStr, 1024, 0);
-      this->pumpPin = pumpPin;
-      this->ledPin = ledPin;
-    };
-
-    void init() {
-      pinMode(pumpPin, OUTPUT);
-      digitalWrite(pumpPin, LOW);
-      pinMode(ledPin, OUTPUT);
-      digitalWrite(ledPin, LOW);
-      rheo.init();
-      sens.init();
-    }
-
-    int update() {
-      rheo.readVal();
-      sens.readVal();
-      int ret = 0;
-      if (rheo.lt(sens.getVal())) {
-        ret = blinkPin(ledPin, 1000, 0);
-        if (nextPump-- <= 0) {
-          ret += blinkPin(pumpPin, 3000, 0);
-          nextPump = 30 * 60;
-          v = " pmp ";
-        } else {
-          v = " w";
-          v += nextPump;
-        }
-        v += " ";
-      } else {
-        ret = blinkPin(ledPin, 10, 0);
-        nextPump = 3;
-        v = " oki ";
-      }
-      //      Serial.println(toString());
-      return ret;
-    };
-
-    String toString() {
-      String res = "";
-      res += id;
-      res += " s" + sens.toString();
-      if (rheo.enabled()) {
-        res += v;
-        res += "r";
-        res += rheo.toString();
-      }
-      res += ";\t";
-      this->res = res;
-      return this->res;
-    }
-
-  private:
-    void blink(int highMs, int lowMs, int count) {
-      for (int i = 0; i < count; i++) blinkPin(ledPin, highMs, lowMs);
-    }
-
+struct AbstractDriver {
+  virtual int do_open() = 0, do_close() = 0, do_update() = 0;
+  virtual String get_state() = 0;
 };
 
-class ExtRegualtedDispenser {
-    int reoVal;
-    NormalizedAnalogVal  sens;
-    int id, nextPump, pumpPin, ledPin;
-    String res;
-    String v;
-  public:
-    ExtRegualtedDispenser(int id, int sensPin, String sensPinStr, int pumpPin, int ledPin): reoVal{1} {
-      this->id = id;
-      sens = NormalizedAnalogVal(sensPin, sensPinStr, 700., 400.);
-      this->pumpPin = pumpPin;
-      this->ledPin = ledPin;
+struct ExtRegulatedDispenser {
+    ExtRegulatedDispenser(int id, int sensPin, String sensPinStr, int ledPin, AbstractDriver &driver):
+      reoValMax{1}, reoValMin{1}, ledPin{ledPin, true}, id{id}, sens{sensPin, sensPinStr}, driver{driver} {
     };
+
+    int getCurrent() {
+      return sens.getVal();
+    }
 
     void setReo(int val) {
-      this->reoVal = val;
+      val = val % 1024;
+      this->reoValMax = val;
+      this->reoValMin = val;
     }
 
-    int getReo() const {
-      return this->reoVal;
+    void setReoMax(int val) {
+      val = val % 1024;
+      this->reoValMax = val;
     }
 
-    void init() {
-      pinMode(pumpPin, OUTPUT);
-      digitalWrite(pumpPin, LOW);
-      pinMode(ledPin, OUTPUT);
-      digitalWrite(ledPin, LOW);
-      sens.init();
+    void setReoMin(int val) {
+      val = val % 1024;
+      this->reoValMin = val;
+    }
+
+    int getReoMax() const {
+      return this->reoValMax;
+    }
+
+    int getReoMin() const {
+      return this->reoValMin;
+    }
+
+
+    int doPump() {
+      return driver.do_open();
+    }
+
+    int stopPump() {
+      auto var = driver.do_close();
+      return var;
+    }
+
+    String getState()  {
+      return driver.get_state();
     }
 
     int update() {
+      if (reoValMax <= reoValMin) {
+        reoValMin = reoValMax;
+      }
       sens.readVal();
       int ret = 0;
-      if (reoVal < sens.getVal()) {
-        ret = blinkPin(ledPin, 1000, 0);
-        if (nextPump-- <= 0) {
-          ret += blinkPin(pumpPin, 3000, 0);
-          nextPump = 30 * 60;
-          v = " pmp ";
-        } else {
-          v = " w";
-          v += nextPump;
-        }
-        v += " ";
-      } else {
-        ret = blinkPin(ledPin, 10, 0);
-        nextPump = 3;
-        v = " oki ";
+      if (sens.getVal() < reoValMin) {
+        ret += ledPin.blink(10);
+        ret += stopPump();
+      } else if (sens.getVal() > reoValMax) {
+        ret += ledPin.blink(1000);
+        //        ret += doPump();
       }
-      //      Serial.println(toString());
+      v += driver.do_update();
+      //Serial.println(toString());
       return ret;
     };
 
@@ -230,19 +147,136 @@ class ExtRegualtedDispenser {
       res += " s" + sens.toString();
       res += v;
       res += "r";
-      res += reoVal;
-      res += ";\t";
+      res += this->reoValMin;
+      res += "\\";
+      res += this->reoValMax;
+      res += "; \t";
+
       this->res = res;
       return this->res;
     }
 
-  private:
-    void blink(int highMs, int lowMs, int count) {
-      for (int i = 0; i < count; i++) blinkPin(ledPin, highMs, lowMs);
+    ~ExtRegulatedDispenser() {
     }
 
+  private:
+    Input  sens;
+    const int id;
+    const Output ledPin;
+    AbstractDriver &driver;
+    int reoValMax, reoValMin;
+    String res, v;
 };
 
+
+
+struct CraneDriver : AbstractDriver {
+    CraneDriver(int pin1, int pin2) {
+      this->pin1 = pin1;
+      this->pin2 = pin2;
+      str.reserve(128);
+      pinMode(pin1, OUTPUT);
+      pinMode(pin2, OUTPUT);
+      switch_crane(pin1, pin2, LOW, LOW);
+    }
+
+    virtual int do_close() {
+      if (is_open != 1) {
+        is_open = 1;
+        Serial.println("do_close: Closing crane.");
+        switch_crane(pin1, pin2, LOW, HIGH);
+      } else {
+        Serial.println("do_close: Already closed.");
+      }
+    }
+
+    int do_open() {
+      if (is_open != 0) {
+        is_open = 0;
+        Serial.println("Open crane");
+        switch_crane(pin1, pin2, HIGH, LOW);
+      }
+    }
+
+    bool is_pumping() {
+      return is_open == 1;
+    }
+
+  private:
+
+    void switch_crane(int p1, int p2, int s1, int s2) {
+      write_pin(p1, s1);
+      write_pin(p2, s2);
+    }
+    void write_pin(int pin, int s) {
+#ifdef DEBUG_D
+      String str = "Write: ";
+      str += pin;
+      str += " = ";
+      str += s;
+      str += "; ";
+      Serial.println(str);
+#endif
+      digitalWrite(pin, s);
+    }
+
+    int pin1, pin2;
+    int is_open = -1;
+    String str;
+};
+
+struct PumpDriver : AbstractDriver {
+
+    PumpDriver(int pin): pump{pin} {
+    }
+
+    int do_close() override {
+      pumping = false;
+      return 0;
+    }
+
+    int do_open() override {
+      if (!pumping) {
+        pumping = true;
+        nextPump = 0;
+      }
+      return 0;
+    }
+
+    int do_update() override {
+      if (!pumping) {
+        return 0;
+      }
+      int ret;
+      if (nextPump-- <= 0) {
+        nextPump = 30 * 60;
+        ret += pump.blink(3000);
+        pumpCount++;
+      }
+      return ret;
+    }
+
+    String get_state() override {
+      if (pumping) {
+        state = String("open(") + pumpCount + ")";
+      } else   {
+        state = String("closed(") + pumpCount + ")";
+      }
+      return state;
+    }
+
+  private:
+
+
+    bool is_pumping() {
+      return pumping;
+    }
+
+    String state;
+    const Output pump;
+    int nextPump, pumpCount;
+    bool pumping;
+};
 
 
 #endif

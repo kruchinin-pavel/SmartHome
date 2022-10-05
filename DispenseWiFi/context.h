@@ -21,7 +21,7 @@
 
 /* Set these to your desired softAP credentials. They are not configurable at runtime */
 #ifndef APSSID
-#define APSSID "Dispenser_ap"
+#define APSSID "Palm_Dispenser"
 #define APPSK  "12345678"
 #endif
 
@@ -29,7 +29,7 @@ const char *softAP_ssid = APSSID;
 const char *softAP_password = APPSK;
 
 /* hostname for mDNS. Should work at least on windows. Try http://esp8266.local */
-const char *myHostname = "esp8266";
+const char *myHostname = "palm_disp";
 
 /* Don't set this wifi credentials. They are configurated at runtime and stored on EEPROM */
 char ssid[33] = "";
@@ -45,7 +45,7 @@ ESP8266WebServer server(80);
 /* Soft AP network parameters */
 IPAddress apIP(172, 217, 28, 1);
 IPAddress netMsk(255, 255, 255, 0);
-
+IPAddress mqtt_server{ 192, 168, 2, 42 };  // ip адресс mqtt сервера
 
 /** Should I connect to WLAN asap? */
 boolean connect;
@@ -56,6 +56,8 @@ unsigned long lastConnectTry = 0;
 /** Current WLAN status */
 unsigned int status = WL_IDLE_STATUS;
 
-unsigned int humidityLevel = 100000;
+unsigned int humidityLevelMin = 100000;
+unsigned int humidityLevelMax = 100000;
 
+WiFiClient wifiClient;
 #endif

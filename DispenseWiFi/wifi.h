@@ -6,8 +6,6 @@
 
 
 void setup_wifi() {
-  delay(1000);
-  Serial.begin(115200);
   Serial.println();
   Serial.println("Configuring access point...");
   /* You can remove the password parameter if you want the AP to be open. */
@@ -25,6 +23,7 @@ void setup_wifi() {
   server.on("/", handleRoot);
   server.on("/wifi", handleWifi);
   server.on("/wifisave", handleWifiSave);
+  server.on("/mqttsave", handleMqttSave);
   server.on("/generate_204", handleRoot);  //Android captive portal. Maybe not needed. Might be handled by notFound handler.
   server.on("/fwlink", handleRoot);  //Microsoft captive portal. Maybe not needed. Might be handled by notFound handler.
   server.onNotFound(handleNotFound);
